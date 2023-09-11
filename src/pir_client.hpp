@@ -40,7 +40,7 @@ public:
                                   std::vector<std::uint64_t> new_element,
                                   std::uint64_t offset);
 
-private:
+// private:
   seal::EncryptionParameters enc_params_;
   PirParams pir_params_;
 

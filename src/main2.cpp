@@ -15,14 +15,30 @@ using namespace seal::util;
 
 int main(int argc, char *argv[]) {
 
-  uint64_t number_of_items = 1 << 8;
-  uint64_t size_per_item = 200; // in bytes
   uint32_t N = 4096;
 
   // Recommended values: (logt, d) = (20, 2).
   uint32_t logt = 20;
 
-//   uint64_t size_per_item = N*logt / 8; // in bytes
+  // Get number of items and size per item from command line
+  if (argc <= 1) {
+    cout << "Usage: ./main2 <number_of_items> <size_per_item>" << endl;
+    return 1;
+  }
+
+  uint64_t number_of_items = atoi(argv[1]);
+  // if the second arguement is not provided, then use the default size_per_item which is N*logt / 8
+  uint64_t size_per_item;
+  if (argv[2] == NULL) {
+    size_per_item = N*logt / 8;
+  } else {
+    size_per_item = atoi(argv[2]);
+  }
+
+
+  // uint64_t number_of_items = 1 << 8;
+  // uint64_t size_per_item = 200; // in bytes
+  // uint64_t size_per_item = N*logt / 8; // in bytes
 
   uint32_t d = 2;
   bool use_symmetric = true; // use symmetric encryption instead of public key
@@ -36,14 +52,14 @@ int main(int argc, char *argv[]) {
 
   // Generates all parameters
 
-  cout << "Main: Generating SEAL parameters" << endl;
+  // cout << "Main: Generating SEAL parameters" << endl;
   gen_encryption_params(N, logt, enc_params);
 
-  cout << "Main: Verifying SEAL parameters" << endl;
+  // cout << "Main: Verifying SEAL parameters" << endl;
   verify_encryption_params(enc_params);
-  cout << "Main: SEAL parameters are good" << endl;
+  // cout << "Main: SEAL parameters are good" << endl;
 
-  cout << "Main: Generating PIR parameters" << endl;
+  // cout << "Main: Generating PIR parameters" << endl;
   gen_pir_params(number_of_items, size_per_item, d, enc_params, pir_params,
                  use_symmetric, use_batching, use_recursive_mod_switching);
 
@@ -52,7 +68,7 @@ int main(int argc, char *argv[]) {
 
   // Initialize PIR client....
   PIRClient client(enc_params, pir_params);
-  cout << "Main: Generating galois keys for client" << endl;
+  // cout << "Main: Generating galois keys for client" << endl;
 
   SEALContext context(enc_params, true);
 
@@ -74,8 +90,7 @@ int main(int argc, char *argv[]) {
     Serializable<GaloisKeys> serial_gal_keys = client.keygen_->create_galois_keys(galois_elts);
 
      stringstream strstream;
-    int size_gal_keys = 0;
-    size_gal_keys = serial_gal_keys.save(strstream);
+    int size_gal_keys = serial_gal_keys.save(strstream);
     cout << "size_gal_keys: " << size_gal_keys << " bytes" << endl;
   
   GaloisKeys galois_keys; 
@@ -85,18 +100,18 @@ int main(int argc, char *argv[]) {
 
 
   // Initialize PIR Server
-  cout << "Main: Initializing server" << endl;
+  // cout << "Main: Initializing server" << endl;
   PIRServer server(enc_params, pir_params);
 
   // Server maps the galois key to client 0. We only have 1 client,
   // which is why we associate it with 0. If there are multiple PIR
   // clients, you should have each client generate a galois key,
   // and assign each client an index or id, then call the procedure below.
-  // server.set_galois_key(0, galois_keys);
+  server.set_galois_key(0, galois_keys);
 
-  cout << "Main: Creating the database with random data (this may take some "
-          "time) ..."
-       << endl;
+  // cout << "Main: Creating the database with random data (this may take some "
+  //         "time) ..."
+  //      << endl;
 
   // Create test database
   auto db(make_unique<uint8_t[]>(number_of_items * size_per_item));
@@ -121,16 +136,16 @@ int main(int argc, char *argv[]) {
   auto time_pre_e = high_resolution_clock::now();
   auto time_pre_us =
       duration_cast<microseconds>(time_pre_e - time_pre_s).count();
-  cout << "Main: database pre processed " << endl;
+  // cout << "Main: database pre processed " << endl;
 
   // Choose an index of an element in the DB
   uint64_t ele_index =
       rd() % number_of_items; // element in DB at random position
   uint64_t index = client.get_fv_index(ele_index);   // index of FV plaintext
   uint64_t offset = client.get_fv_offset(ele_index); // offset in FV plaintext
-  cout << "Main: element index = " << ele_index << " from [0, "
-       << number_of_items - 1 << "]" << endl;
-  cout << "Main: FV index = " << index << ", FV offset = " << offset << endl;
+  // cout << "Main: element index = " << ele_index << " from [0, "
+  //      << number_of_items - 1 << "]" << endl;
+  // cout << "Main: FV index = " << index << ", FV offset = " << offset << endl;
 
   // Measure query generation
   auto time_query_s = high_resolution_clock::now();
@@ -138,7 +153,7 @@ int main(int argc, char *argv[]) {
   auto time_query_e = high_resolution_clock::now();
   auto time_query_us =
       duration_cast<microseconds>(time_query_e - time_query_s).count();
-  cout << "Main: query generated" << endl;
+  // cout << "Main: query generated" << endl;
 
   // Measure serialized query generation (useful for sending over the network)
   stringstream client_stream;
@@ -148,7 +163,7 @@ int main(int argc, char *argv[]) {
   auto time_s_query_e = high_resolution_clock::now();
   auto time_s_query_us =
       duration_cast<microseconds>(time_s_query_e - time_s_query_s).count();
-  cout << "Main: serialized query generated" << endl;
+  // cout << "Main: serialized query generated" << endl;
 
   // Measure query deserialization (useful for receiving over the network)
   auto time_deserial_s = high_resolution_clock::now();
@@ -156,7 +171,7 @@ int main(int argc, char *argv[]) {
   auto time_deserial_e = high_resolution_clock::now();
   auto time_deserial_us =
       duration_cast<microseconds>(time_deserial_e - time_deserial_s).count();
-  cout << "Main: query deserialized" << endl;
+  // cout << "Main: query deserialized" << endl;
 
   // Measure query processing (including expansion)
   auto time_server_s = high_resolution_clock::now();
@@ -166,11 +181,10 @@ int main(int argc, char *argv[]) {
   auto time_server_e = high_resolution_clock::now();
   auto time_server_us =
       duration_cast<microseconds>(time_server_e - time_server_s).count();
-  cout << "Main: reply generated" << endl;
+  // cout << "Main: reply generated" << endl;
 
   // Serialize reply (useful for sending over the network)
   int reply_size = server.serialize_reply(reply, server_stream);
-  cout << "Main: reply serialized" << endl;
 
   // Measure response extraction
   auto time_decode_s = chrono::high_resolution_clock::now();
@@ -178,7 +192,7 @@ int main(int argc, char *argv[]) {
   auto time_decode_e = chrono::high_resolution_clock::now();
   auto time_decode_us =
       duration_cast<microseconds>(time_decode_e - time_decode_s).count();
-  cout << "Main: reply decoded" << endl;
+  // cout << "Main: reply decoded" << endl;
 
   assert(elems.size() == size_per_item);
 
@@ -186,9 +200,9 @@ int main(int argc, char *argv[]) {
   // Check that we retrieved the correct element
   for (uint32_t i = 0; i < size_per_item; i++) {
     if (elems[i] != db_copy.get()[(ele_index * size_per_item) + i]) {
-      cout << "Main: elems " << (int)elems[i] << ", db "
-           << (int)db_copy.get()[(ele_index * size_per_item) + i] << endl;
-      cout << "Main: PIR result wrong at " << i << endl;
+      // cout << "Main: elems " << (int)elems[i] << ", db "
+      //      << (int)db_copy.get()[(ele_index * size_per_item) + i] << endl;
+      // cout << "Main: PIR result wrong at " << i << endl;
       failed = true;
     }
   }
@@ -197,27 +211,28 @@ int main(int argc, char *argv[]) {
   }
 
   // Output results
-  cout << "Main: PIR result correct!" << endl;
-  cout << "Main: PIRServer pre-processing time: " << time_pre_us / 1000 << " ms"
-       << endl;
-  cout << "Main: PIRClient query generation time: " << time_query_us / 1000
-       << " ms" << endl;
-  cout << "Main: PIRClient serialized query generation time: "
-       << time_s_query_us / 1000 << " ms" << endl;
-  cout << "Main: PIRServer query deserialization time: " << time_deserial_us
-       << " us" << endl;
-  cout << "Main: PIRServer reply generation time: " << time_server_us / 1000
-       << " ms" << endl;
-  cout << "Main: PIRClient answer decode time: " << time_decode_us / 1000
-       << " ms" << endl;
-  cout << "Main: Reply num ciphertexts: " << reply.size() << endl;
+  // cout << "Main: PIR result correct!" << endl;
+  // cout << "Main: PIRServer pre-processing time: " << time_pre_us / 1000 << " ms"
+  //      << endl;
+  // cout << "Main: PIRClient query generation time: " << time_query_us / 1000
+  //      << " ms" << endl;
+  // cout << "Main: PIRClient serialized query generation time: "
+  //      << time_s_query_us / 1000 << " ms" << endl;
+  // cout << "Main: PIRServer query deserialization time: " << time_deserial_us
+  //      << " us" << endl;
+  // cout << "Main: PIRServer reply generation time: " << time_server_us / 1000
+  //      << " ms" << endl;
+  // cout << "Main: PIRClient answer decode time: " << time_decode_us / 1000
+  //      << " ms" << endl;
+  // cout << "Main: Reply num ciphertexts: " << reply.size() << endl;
   
   cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-  cout << "number of elements: " << pir_params.ele_num << endl;
-  cout << "element size: " << pir_params.ele_size << endl;
+  cout << "number_of_elements: " << pir_params.ele_num << endl;
+  cout << "max_element_size: " << pir_params.ele_size << endl;
+  cout << "PIRServer_reply_generation_time: " << time_server_us / 1000 << " ms" << endl;
 
-  cout << "Main: Query size: " << query_size << " bytes" << endl;
-  cout << "Main: Reply size: " << reply_size << " bytes" << endl;
+  cout << "query_size: " << query_size << " bytes" << endl;
+  cout << "reply_size: " << reply_size << " bytes" << endl;
     cout << "size_gal_keys: " << size_gal_keys << " bytes" << endl;
   cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
 

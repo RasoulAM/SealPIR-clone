@@ -35,6 +35,12 @@ void gen_encryption_params(std::uint32_t N, std::uint32_t logt,
 
   enc_params.set_poly_modulus_degree(N);
   enc_params.set_coeff_modulus(CoeffModulus::BFVDefault(N));
+  // for (auto &modulus : enc_params.coeff_modulus()) {
+    // cout << modulus.bit_count() << endl;
+    // if (modulus.bit_count() < logt + 1) {
+    //   throw invalid_argument("Coefficient modulus not large enough.");
+    // }
+  // }
   enc_params.set_plain_modulus(PlainModulus::Batching(N, logt + 1));
   // the +1 above ensures we get logt bits for each plaintext coefficient.
   // Otherwise the coefficient modulus t will be logt bits, but only floor(t) =
@@ -83,6 +89,12 @@ void gen_pir_params(uint64_t ele_num, uint64_t ele_size, uint32_t d,
   }
 
   vector<uint64_t> nvec = get_dimensions(num_of_plaintexts, d);
+  // print the elemets in nvec in one line
+  // cout << "nvec: ";
+  // for (auto i : nvec) {
+  //   cout << i << " ";
+  // }
+  // cout << endl;
 
   uint32_t expansion_ratio = 0;
   for (uint32_t i = 0; i < enc_params.coeff_modulus().size(); ++i) {
@@ -108,24 +120,24 @@ void print_pir_params(const PirParams &pir_params) {
       accumulate(pir_params.nvec.begin(), pir_params.nvec.end(), 1,
                  multiplies<uint64_t>());
 
-  cout << "PIR Parameters" << endl;
-  cout << "number of elements: " << pir_params.ele_num << endl;
-  cout << "element size: " << pir_params.ele_size << endl;
-  cout << "elements per BFV plaintext: " << pir_params.elements_per_plaintext
-       << endl;
-  cout << "dimensions for d-dimensional hyperrectangle: " << pir_params.d
-       << endl;
-  cout << "number of BFV plaintexts (before padding): "
-       << pir_params.num_of_plaintexts << endl;
-  cout << "Number of BFV plaintexts after padding (to fill d-dimensional "
-          "hyperrectangle): "
-       << prod << endl;
-  cout << "expansion ratio: " << pir_params.expansion_ratio << endl;
-  cout << "Using symmetric encryption: " << pir_params.enable_symmetric << endl;
-  cout << "Using recursive mod switching: " << pir_params.enable_mswitching
-       << endl;
-  cout << "slot count: " << pir_params.slot_count << endl;
-  cout << "==============================" << endl;
+  // cout << "PIR Parameters" << endl;
+  // cout << "number of elements: " << pir_params.ele_num << endl;
+  // cout << "element size: " << pir_params.ele_size << endl;
+  // cout << "elements per BFV plaintext: " << pir_params.elements_per_plaintext
+  //      << endl;
+  // cout << "dimensions for d-dimensional hyperrectangle: " << pir_params.d
+  //      << endl;
+  // cout << "number of BFV plaintexts (before padding): "
+  //      << pir_params.num_of_plaintexts << endl;
+  // cout << "Number of BFV plaintexts after padding (to fill d-dimensional "
+  //         "hyperrectangle): "
+  //      << prod << endl;
+  // cout << "expansion ratio: " << pir_params.expansion_ratio << endl;
+  // cout << "Using symmetric encryption: " << pir_params.enable_symmetric << endl;
+  // cout << "Using recursive mod switching: " << pir_params.enable_mswitching
+  //      << endl;
+  // cout << "slot count: " << pir_params.slot_count << endl;
+  // cout << "==============================" << endl;
 }
 
 void print_seal_params(const EncryptionParameters &enc_params) {
@@ -133,18 +145,18 @@ void print_seal_params(const EncryptionParameters &enc_params) {
   Modulus t = enc_params.plain_modulus();
   std::uint32_t logt = floor(log2(t.value()));
 
-  cout << "SEAL encryption parameters" << endl;
-  cout << "Degree of polynomial modulus (N): " << N << endl;
-  cout << "Size of plaintext modulus (log t):" << logt << endl;
-  cout << "There are " << enc_params.coeff_modulus().size()
-       << " coefficient modulus:" << endl;
+  // cout << "SEAL encryption parameters" << endl;
+  // cout << "Degree of polynomial modulus (N): " << N << endl;
+  // cout << "Size of plaintext modulus (log t):" << logt << endl;
+  // cout << "There are " << enc_params.coeff_modulus().size()
+  //      << " coefficient modulus:" << endl;
 
   for (uint32_t i = 0; i < enc_params.coeff_modulus().size(); ++i) {
     double logqi = log2(enc_params.coeff_modulus()[i].value());
-    cout << "Size of coefficient modulus " << i << " (log q_" << i
-         << "): " << logqi << endl;
+    // cout << "Size of coefficient modulus " << i << " (log q_" << i
+    //      << "): " << logqi << endl;
   }
-  cout << "==============================" << endl;
+  // cout << "==============================" << endl;
 }
 
 // Number of coefficients needed to represent a database element
